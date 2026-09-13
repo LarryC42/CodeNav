@@ -14,7 +14,6 @@ Commands:
   index [dir]                 List all JS/TS files with line counts and header descriptions
   skeleton <file>             Extract classes, methods, functions, and symbols with line ranges
   symbol <file> <name>        Extract specific function/class AST definition
-  slice <file:start-end>      Extract precise line range with line numbers
 `);
   process.exit(0);
 }
@@ -127,23 +126,23 @@ if (command === 'index') {
 
   traverse(ast, {
     ClassDeclaration(nodePath) {
-      if (nodePath.node.id && nodePath.node.id.name.toLowerCase() === extra.toLowerCase()) {
+      if (nodePath.node.id?.name && nodePath.node.id.name.toLowerCase() === extra.toLowerCase()) {
         matched = { name: nodePath.node.id.name, type: 'CLASS', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
       }
     },
     ClassMethod(nodePath) {
-      const name = nodePath.node.key.name || nodePath.node.key.value;
-      if (name && name.toLowerCase() === extra.toLowerCase()) {
-        matched = { name, type: 'METHOD', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
+      const name = nodePath.node.key?.name || nodePath.node.key?.value;
+      if (name && String(name).toLowerCase() === extra.toLowerCase()) {
+        matched = { name: String(name), type: 'METHOD', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
       }
     },
     FunctionDeclaration(nodePath) {
-      if (nodePath.node.id && nodePath.node.id.name.toLowerCase() === extra.toLowerCase()) {
+      if (nodePath.node.id?.name && nodePath.node.id.name.toLowerCase() === extra.toLowerCase()) {
         matched = { name: nodePath.node.id.name, type: 'FUNCTION', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
       }
     },
     VariableDeclarator(nodePath) {
-      if (nodePath.node.id && nodePath.node.id.name.toLowerCase() === extra.toLowerCase()) {
+      if (nodePath.node.id?.name && nodePath.node.id.name.toLowerCase() === extra.toLowerCase()) {
         matched = { name: nodePath.node.id.name, type: 'VARIABLE/FN', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
       }
     }
@@ -158,15 +157,9 @@ if (command === 'index') {
     console.log(`${String(i + 1).padStart(4)}: ${lines[i]}`);
   }
 } else if (command === 'slice') {
-  const match = target.match(/^(.*?):(\d+)-(\d+)$/);
-  if (!match) { console.error('Usage: codenav-js slice <filePath:start-end>'); process.exit(1); }
-  const [, filePath, startStr, endStr] = match;
-  const start = parseInt(startStr, 10);
-  const end = parseInt(endStr, 10);
-  const code = fs.readFileSync(path.resolve(filePath), 'utf-8');
-  const lines = code.split('\n');
-  console.log(`\n=== SLICE: ${path.basename(filePath)} (Lines ${start}-${end} of ${lines.length}) [${filePath}] ===`);
-  for (let i = Math.max(1, start); i <= Math.min(lines.length, end); i++) {
-    console.log(`${String(i).padStart(4)}: ${lines[i - 1]}`);
-  }
+  console.error("Error: 'slice' is disabled. Use 'skeleton <file>' to list AST symbols and 'symbol <file> <name>' to extract definitions.");
+  process.exit(1);
+} else {
+  console.error(`Unknown command: '${command}'. Valid commands: index, skeleton, symbol`);
+  process.exit(1);
 }

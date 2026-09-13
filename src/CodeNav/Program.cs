@@ -31,7 +31,7 @@ public class Program
                 "status" or "coverage" => RunCoverage(cmdArgs),
                 "skeleton" or "sk" => RunSkeleton(cmdArgs),
                 "symbol" or "symbols" or "sym" => RunSymbols(cmdArgs),
-                "slice" or "sl" => RunSlice(cmdArgs),
+                "slice" or "sl" => RunSliceDisabled(cmdArgs),
                 "index" or "idx" => RunIndex(cmdArgs),
                 _ => HandleDirectArgumentOrError(args)
             };
@@ -69,10 +69,6 @@ Commands:
       Automatically omits code that has already been returned this session unless --all is passed.
       If a symbol is not found, clearly lists all available symbols in the target file.
 
-  slice, sl ""<file1.cs>:<start>-<end>; <file2.cs>:<start>-<end>"" [--all | --force] [...]
-      Prints line-numbered slice of file content across specified line ranges across multiple files.
-      Deduplicates against previously returned line ranges in this session.
-
   index, idx [directory]
       Generates compact file index with header descriptions for all C# / JS files.
 
@@ -80,7 +76,6 @@ Examples:
   dotnet run --project src/EventHorizon.CodeNav -- reset
   dotnet run --project src/EventHorizon.CodeNav -- skeleton src/EventHorizon.Infrastructure/Repositories/ProblemRepository.cs
   dotnet run --project src/EventHorizon.CodeNav -- symbol ""src/EventHorizon.Infrastructure/Configuration/AppConfig.cs: Load, Validate; src/EventHorizon.Infrastructure/AI/AiClients.cs: MockLlmClient""
-  dotnet run --project src/EventHorizon.CodeNav -- slice ""src/EventHorizon.Api/Program.cs: 15-60; src/EventHorizon.Infrastructure/AI/AiClients.cs: 1-40""
   dotnet run --project src/EventHorizon.CodeNav -- index src/EventHorizon.Infrastructure
 ");
     }
@@ -95,7 +90,7 @@ Examples:
         // If user passed a slice pattern like "file.cs:10-20" directly
         if (Regex.IsMatch(first, @":\d+-\d+$"))
         {
-            return RunSlice(args);
+            return RunSliceDisabled(args);
         }
         // If user passed a symbol pattern like "file.cs: Symbol" directly
         if (first.Contains(':'))
@@ -321,7 +316,7 @@ Examples:
 
         foreach (string rawArg in queries)
         {
-            int colonIndex = rawArg.IndexOf(':');
+            int colonIndex = rawArg.LastIndexOf(':');
             if (colonIndex == -1)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -500,77 +495,14 @@ Examples:
 
     #endregion
 
-    #region 3. SLICE (Line Range Extraction with Deduplication)
+    #region 3. SLICE (Disabled Command)
 
-    private static int RunSlice(string[] args)
+    private static int RunSliceDisabled(string[] args)
     {
-        if (args.Length == 0)
-        {
-            Console.Error.WriteLine(@"Usage: slice ""<file1.cs>:<start>-<end>; <file2.cs>:<start>-<end>"" [--all | --force] [...]");
-            return 1;
-        }
-
-        bool forceAll = args.Any(a => a is "--all" or "-a" or "--force" or "-f");
-        var requests = args
-            .Where(a => a is not ("--all" or "-a" or "--force" or "-f"))
-            .SelectMany(a => a.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .Where(q => !string.IsNullOrWhiteSpace(q))
-            .ToArray();
-
-        var session = SessionTracker.Load();
-
-        foreach (string req in requests)
-        {
-            int lastColon = req.LastIndexOf(':');
-            if (lastColon == -1)
-            {
-                Console.Error.WriteLine($"[Invalid Slice Format] '{req}'. Expected <filePath>:<startLine>-<endLine>");
-                continue;
-            }
-
-            string filePath = req[..lastColon].Trim();
-            string rangePart = req[(lastColon + 1)..].Trim();
-            string[] bounds = rangePart.Split('-');
-            if (bounds.Length != 2 || !int.TryParse(bounds[0], out int startLine) || !int.TryParse(bounds[1], out int endLine))
-            {
-                Console.Error.WriteLine($"[Invalid Range Format] '{rangePart}' in '{req}'. Expected e.g. 10-50");
-                continue;
-            }
-
-            string fullPath = Path.GetFullPath(filePath);
-            if (!File.Exists(fullPath))
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"[Warning] File not found: {filePath}");
-                Console.ResetColor();
-                continue;
-            }
-
-            string[] lines = File.ReadAllLines(fullPath);
-            string relPath = Path.GetRelativePath(Directory.GetCurrentDirectory(), fullPath).Replace('\\', '/');
-
-            int actualStart = Math.Max(1, startLine);
-            int actualEnd = Math.Min(lines.Length, endLine);
-
-            if (!forceAll && session.IsRangeFullyInspected(relPath, actualStart, actualEnd))
-            {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.WriteLine($"\n[CodeNav Deduplicated] Slice {relPath}:{actualStart}-{actualEnd} was already returned this session. Use --all or 'reset' to view again.");
-                Console.ResetColor();
-                continue;
-            }
-
-            Console.WriteLine($"\n=== SLICE: {relPath} (Lines {actualStart}-{actualEnd} of {lines.Length}) ===");
-            for (int i = actualStart - 1; i < actualEnd; i++)
-            {
-                Console.WriteLine($"{(i + 1).ToString().PadLeft(4)}: {lines[i]}");
-            }
-
-            session.MarkRangeInspected(relPath, actualStart, actualEnd);
-        }
-
-        session.Save();
-        return 0;
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Error.WriteLine("[Error] 'slice' command is disabled. Use 'skeleton <file>' to list AST symbols and 'symbol \"<file>: <SymbolName>\"' to extract definitions.");
+        Console.ResetColor();
+        return 1;
     }
 
     #endregion

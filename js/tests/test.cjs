@@ -15,8 +15,12 @@ assert(routerOut.includes('METHOD    | async handleRoute'), 'Should extract hand
 const symbolOut = execSync(`node "${script}" symbol "${routerPath}" constructor`, { encoding: 'utf-8' }).trim();
 assert(symbolOut.includes('constructor(shell)'), 'Should extract constructor');
 
-// Test 3: Slice extraction
-const sliceOut = execSync(`node "${script}" slice "${routerPath}:11-15"`, { encoding: 'utf-8' }).trim();
-assert(sliceOut.includes('export class Router'), 'Should extract sliced line range');
+// Test 3: Slice command should be disabled
+try {
+  execSync(`node "${script}" slice "${routerPath}:11-15"`, { encoding: 'utf-8', stdio: 'pipe' });
+  assert.fail('Slice should throw an error since it is disabled');
+} catch (err) {
+  assert(err.stderr.includes('slice\' is disabled') || err.message.includes('slice\' is disabled'), 'Slice should output disabled error');
+}
 
 console.log('All JS AST unit tests passed successfully!');

@@ -6,14 +6,12 @@ For ALL code inspection, discovery, and navigation across C#, JS, and mixed code
 - **FOR C# (.cs)**: Use `codenav` (or `C:\Users\charl\.local\bin\codenav.exe`):
   - `codenav index [path]` -> Directory overview with lines and summaries
   - `codenav skeleton <file.cs>` -> Classes, methods, records, properties with line spans
-  - `codenav symbol <file.cs> <symbol>` -> Exact method / class implementation
-  - `codenav slice "<file.cs>:<start>-<end>"` -> Surgical line block with line numbers
+  - `codenav symbol "<file.cs>: <SymbolName>"` -> Exact method / class implementation
 
 - **FOR JAVASCRIPT / TYPESCRIPT (.js, .ts, .jsx, .tsx)**: Use `codenav-js` (or `node c:\prj\codenav\js\bin\codenav-js.cjs`):
   - `codenav-js index [path]` -> JS/TS directory file list with header descriptions
   - `codenav-js skeleton <file.js>` -> Babel AST extracted classes, methods, functions, arrow fns
   - `codenav-js symbol <file.js> <symbol>` -> Exact function / class AST implementation
-  - `codenav-js slice "<file.js>:<start>-<end>"` -> Precise line slice
 
 - **STRICT PROHIBITIONS**:
   - **NEVER** use `view_file` (100% duplicative and prohibited).
