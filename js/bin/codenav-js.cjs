@@ -117,44 +117,79 @@ if (command === 'index') {
     console.log(`${range} | ${s.type.padEnd(9)} | ${s.name}`);
   }
 } else if (command === 'symbol') {
-  if (!target || !extra) { console.error('Usage: codenav-js symbol <file> <symbolName>'); process.exit(1); }
-  const parsed = parseAst(path.resolve(target));
-  if (!parsed) process.exit(1);
-  const { code, ast } = parsed;
-  const lines = code.split('\n');
-  let matched = null;
+  if (!target) { console.error('Usage: codenav-js symbol "<file1.js>: sym1, sym2; <file2.js>: sym3" or symbol <file> <symbolName>'); process.exit(1); }
 
-  traverse(ast, {
-    ClassDeclaration(nodePath) {
-      if (nodePath.node.id?.name && nodePath.node.id.name.toLowerCase() === extra.toLowerCase()) {
-        matched = { name: nodePath.node.id.name, type: 'CLASS', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
+  // Support both single (file, symbol) and batched ("file1: sym1, sym2; file2: sym3") formats
+  let specs = [];
+  if (extra) {
+    // Single format: codenav-js symbol file.js symbolName
+    specs.push({ file: target, symbols: [extra] });
+  } else {
+    // Batched format: codenav-js symbol "file1.js: sym1, sym2; file2.js: sym3"
+    // Handle Windows drive letters (C:, D:, etc.) by finding the last colon in each file spec
+    const parts = target.split(';').map(s => s.trim());
+    for (const part of parts) {
+      // Find the rightmost colon that separates file from symbols
+      // On Windows, drive letters appear as "C:" early, symbols section appears as ": symbol1, symbol2" later
+      const colonIdx = part.lastIndexOf(':');
+      if (colonIdx <= 0) {
+        console.error(`Invalid syntax: "${part}". Expected "file: symbol1, symbol2"`);
+        process.exit(1);
       }
-    },
-    ClassMethod(nodePath) {
-      const name = nodePath.node.key?.name || nodePath.node.key?.value;
-      if (name && String(name).toLowerCase() === extra.toLowerCase()) {
-        matched = { name: String(name), type: 'METHOD', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
+      const fileSpec = part.substring(0, colonIdx).trim();
+      const symsSpec = part.substring(colonIdx + 1).trim();
+      if (!fileSpec || !symsSpec) {
+        console.error(`Invalid syntax: "${part}". Expected "file: symbol1, symbol2"`);
+        process.exit(1);
       }
-    },
-    FunctionDeclaration(nodePath) {
-      if (nodePath.node.id?.name && nodePath.node.id.name.toLowerCase() === extra.toLowerCase()) {
-        matched = { name: nodePath.node.id.name, type: 'FUNCTION', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
+      const symbols = symsSpec.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      specs.push({ file: fileSpec, symbols });
+    }
+  }
+
+  // Process each file/symbol combo
+  for (const spec of specs) {
+    const parsed = parseAst(path.resolve(spec.file));
+    if (!parsed) continue;
+    const { code, ast } = parsed;
+    const lines = code.split('\n');
+
+    for (const symbolName of spec.symbols) {
+      let matched = null;
+
+      traverse(ast, {
+        ClassDeclaration(nodePath) {
+          if (nodePath.node.id?.name && nodePath.node.id.name.toLowerCase() === symbolName.toLowerCase()) {
+            matched = { name: nodePath.node.id.name, type: 'CLASS', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
+          }
+        },
+        ClassMethod(nodePath) {
+          const name = nodePath.node.key?.name || nodePath.node.key?.value;
+          if (name && String(name).toLowerCase() === symbolName.toLowerCase()) {
+            matched = { name: String(name), type: 'METHOD', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
+          }
+        },
+        FunctionDeclaration(nodePath) {
+          if (nodePath.node.id?.name && nodePath.node.id.name.toLowerCase() === symbolName.toLowerCase()) {
+            matched = { name: nodePath.node.id.name, type: 'FUNCTION', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
+          }
+        },
+        VariableDeclarator(nodePath) {
+          if (nodePath.node.id?.name && nodePath.node.id.name.toLowerCase() === symbolName.toLowerCase()) {
+            matched = { name: nodePath.node.id.name, type: 'VARIABLE/FN', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
+          }
+        }
+      });
+
+      if (!matched) {
+        console.error(`Symbol '${symbolName}' not found in ${spec.file}`);
+        continue;
       }
-    },
-    VariableDeclarator(nodePath) {
-      if (nodePath.node.id?.name && nodePath.node.id.name.toLowerCase() === extra.toLowerCase()) {
-        matched = { name: nodePath.node.id.name, type: 'VARIABLE/FN', start: nodePath.node.loc.start.line, end: nodePath.node.loc.end.line };
+      console.log(`\n=== SYMBOL: ${matched.name} (${matched.type}, Lines ${matched.start}-${matched.end}) [${spec.file}] ===`);
+      for (let i = matched.start - 1; i < matched.end; i++) {
+        console.log(`${String(i + 1).padStart(4)}: ${lines[i]}`);
       }
     }
-  });
-
-  if (!matched) {
-    console.error(`Symbol '${extra}' not found in ${target}`);
-    process.exit(1);
-  }
-  console.log(`\n=== SYMBOL: ${matched.name} (${matched.type}, Lines ${matched.start}-${matched.end}) [${target}] ===`);
-  for (let i = matched.start - 1; i < matched.end; i++) {
-    console.log(`${String(i + 1).padStart(4)}: ${lines[i]}`);
   }
 } else if (command === 'slice') {
   console.error("Error: 'slice' is disabled. Use 'skeleton <file>' to list AST symbols and 'symbol <file> <name>' to extract definitions.");
