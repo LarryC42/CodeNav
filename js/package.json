@@ -1,0 +1,16 @@
+{
+  "name": "codenav-js",
+  "version": "1.0.0",
+  "description": "True JavaScript / TypeScript AST Code Navigation Tool",
+  "main": "lib/index.js",
+  "bin": {
+    "codenav-js": "bin/codenav-js.cjs"
+  },
+  "scripts": {
+    "test": "node tests/test.cjs"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.26.0",
+    "@babel/traverse": "^7.26.0"
+  }
+}
