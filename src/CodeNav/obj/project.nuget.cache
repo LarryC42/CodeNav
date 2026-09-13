@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "jw4VovR5ufA=",
+  "success": true,
+  "projectFilePath": "C:\\prj\\eh\\src\\EventHorizon.CodeNav\\EventHorizon.CodeNav.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\charl\\.nuget\\packages\\microsoft.codeanalysis.analyzers\\5.9.0-1.26328.17\\microsoft.codeanalysis.analyzers.5.9.0-1.26328.17.nupkg.sha512",
+    "C:\\Users\\charl\\.nuget\\packages\\microsoft.codeanalysis.common\\5.9.0\\microsoft.codeanalysis.common.5.9.0.nupkg.sha512",
+    "C:\\Users\\charl\\.nuget\\packages\\microsoft.codeanalysis.csharp\\5.9.0\\microsoft.codeanalysis.csharp.5.9.0.nupkg.sha512",
+    "C:\\Users\\charl\\.nuget\\packages\\microsoft.net.illink.tasks\\10.0.12\\microsoft.net.illink.tasks.10.0.12.nupkg.sha512",
+    "C:\\Users\\charl\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.12\\microsoft.netcore.app.runtime.win-x64.10.0.12.nupkg.sha512",
+    "C:\\Users\\charl\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.12\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.12.nupkg.sha512",
+    "C:\\Users\\charl\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.12\\microsoft.aspnetcore.app.runtime.win-x64.10.0.12.nupkg.sha512"
+  ],
+  "logs": []
+}

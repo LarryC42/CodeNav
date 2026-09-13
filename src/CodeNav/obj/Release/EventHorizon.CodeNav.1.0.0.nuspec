@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>EventHorizon.CodeNav</id>
+    <version>1.0.0</version>
+    <authors>EventHorizon.CodeNav</authors>
+    <description>Package Description</description>
+    <repository type="git" commit="a40d388c5799673c48691ffeb6bfdee1725b9867" />
+    <dependencies>
+      <group targetFramework="net10.0">
+        <dependency id="Microsoft.CodeAnalysis.CSharp" version="5.9.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\prj\eh\src\EventHorizon.CodeNav\bin\Release\net10.0\EventHorizon.CodeNav.runtimeconfig.json" target="lib\net10.0\EventHorizon.CodeNav.runtimeconfig.json" />
+    <file src="C:\prj\eh\src\EventHorizon.CodeNav\bin\Release\net10.0\EventHorizon.CodeNav.dll" target="lib\net10.0\EventHorizon.CodeNav.dll" />
+  </files>
+</package>

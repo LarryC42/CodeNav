@@ -1,0 +1,2 @@
+C:\Users\charl\.dotnet\tools\EventHorizon.CodeNav.pdb
+C:\Users\charl\.dotnet\tools\EventHorizon.CodeNav.exe
